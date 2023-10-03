@@ -6,6 +6,7 @@ const divWrapper = document.createElement('div');
 document.body.appendChild(divWrapper);
 
 const param = 'type-rxjs';
+// const param = 'ozkostay';
 const url = `https://api.github.com/search/repositories?q=${param}`;
 console.log(url);
 of(url)
@@ -24,15 +25,10 @@ of(url)
   });
   
   function fnList(obj: any) {
-    // console.log('OBJ', obj);
-    // for (let key in obj) {
-    //   console.log(key);
-    // }
     const reps: any[] = obj.items;
     const repsName = reps.map((item) => item.name);
     divWrapper.innerHTML='';
     reps.forEach((item) => {
-      //console.log(item.name);
       divWrapper.insertAdjacentHTML('beforeend', `<p>${item.name}</p>`);
     })
   }
