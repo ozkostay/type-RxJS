@@ -1,34 +1,50 @@
-import { of, range } from 'rxjs';
+import { of, range, fromEvent } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
 import { map, take, tap, retry, switchMap } from 'rxjs/operators';
 
 const divWrapper = document.createElement('div');
 document.body.appendChild(divWrapper);
 
-const param = 'type-rxjs';
-// const param = 'ozkostay';
-const url = `https://api.github.com/search/repositories?q=${param}`;
-console.log(url);
-of(url)
-  .pipe( 
-    // map(x => x + 2),
+const paramString = document.querySelector('input').value;
+const btnGitHub = document.querySelector('.github');
+const btnGitLab = document.querySelector('.gitlab');
+const urlHub = `https://api.github.com/search/repositories?q=${paramString}`;
+const urlLab = `https://gitlab.com/api/v4/projects?search=${paramString}`;
+const githubClick = fromEvent(btnGitHub,'click');
+const gitlabClick = fromEvent(btnGitLab,'click');
+
+// =========================
+gitlabClick.pipe( 
+  retry(3),
+  switchMap(() => ajax.getJSON(urlLab)),
+)
+.subscribe({
+  next: (value: any[]) => {
+    console.log('EVent', value);
+    fnList(value);
+  },
+  error: (error) => console.log('error', error),
+});
+
+// =========================
+githubClick.pipe( 
     retry(3),
-    tap((o) => console.log('xxx', o)),
-    switchMap((o) => ajax.getJSON(o)),
+    switchMap(() => ajax.getJSON(urlHub)),
   )
   .subscribe({
-    next: (value) => {
-      console.log('EVent', value);
-      fnList(value);
+    next: (value: {items: any[]}) => {
+      // console.log('EVent', value);
+      fnList(value.items);
     },
     error: (error) => console.log('error', error),
   });
   
-  function fnList(obj: any) {
-    const reps: any[] = obj.items;
-    const repsName = reps.map((item) => item.name);
-    divWrapper.innerHTML='';
-    reps.forEach((item) => {
-      divWrapper.insertAdjacentHTML('beforeend', `<p>${item.name}</p>`);
-    })
-  }
+
+  // ========================
+  function fnList(items: any[])  {
+  const repsName = items.map((item: {name: string}) => item.name);
+  divWrapper.innerHTML='';
+  repsName.forEach((name) => {
+    divWrapper.insertAdjacentHTML('beforeend', `<p>${name}</p>`);
+  })
+}
